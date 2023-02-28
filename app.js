@@ -121,8 +121,6 @@ app.get('/', (req, res) => {
 
 
 app.get("/signin", (req, res) => {
-    // res.render(__dirname + "/public/index.ejs");
-    // res.render(__dirname + '/public/signup-signin/signin.html')
     // dummy();
     // deleteStu();
     res.render(__dirname + "/public/signin.html");
@@ -148,36 +146,7 @@ app.post('/signin', (req, result) => {
             console.log("err")
         } else if (res.length !== 0) {
             result.send("The username you entered is already in use, use some other username. IT SHOULD BE UNIQUE.")
-            // if (res.length !== 0 ) {
-            //     // var passwordMatches = {value: false}
-            //     // res.every(stu => {
-            //     //     passwordMatches.value = bcrypt.compareSync(password,stu.password);
-            //     //     if (passwordMatches.value) {
-            //     //         return false;
-            //     //     } else {
-            //     //         return true;
-            //     //     }
-            //     // });
-            //     // console.log(passwordMatches.value + " out of foreach") 
-
-            //     // if (passwordMatches.value) {
-            //     //     result.send("You are now logged in.");
-            //     //     isLoggedIn = true;
-            //     // } else {
-            //     //     result.send("The username you entered is already in use, use of some other username. IT SHOULD BE UNIQUE.")
-            //     // }
-                
-
-            // } else {
-            //     newStudent.save((err, res) => {
-            //         if (err) return handleError(err);
-            //         else return console.log("saved successfully")
-            //     });
-
-            //     isLoggedIn = true;
-                
-            //     result.redirect("/home")
-            // }
+              result.redirect("/home")
         } else {
             newStudent.save((err, res) => {
                 if (err) return handleError(err);
