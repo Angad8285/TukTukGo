@@ -115,6 +115,11 @@ function dummyDrivers() {
 //     console.log(random1);
 // })
 
+app.get('/', (req, res) => {
+    res.render(__dirname + "/public/frontPage.html")
+})
+
+
 app.get("/signin", (req, res) => {
     // res.render(__dirname + "/public/index.ejs");
     // res.render(__dirname + '/public/signup-signin/signin.html')
@@ -141,37 +146,45 @@ app.post('/signin', (req, result) => {
         if (err) {
             console.log(err)
             console.log("err")
+        } else if (res.length !== 0) {
+            result.send("The username you entered is already in use, use some other username. IT SHOULD BE UNIQUE.")
+            // if (res.length !== 0 ) {
+            //     // var passwordMatches = {value: false}
+            //     // res.every(stu => {
+            //     //     passwordMatches.value = bcrypt.compareSync(password,stu.password);
+            //     //     if (passwordMatches.value) {
+            //     //         return false;
+            //     //     } else {
+            //     //         return true;
+            //     //     }
+            //     // });
+            //     // console.log(passwordMatches.value + " out of foreach") 
+
+            //     // if (passwordMatches.value) {
+            //     //     result.send("You are now logged in.");
+            //     //     isLoggedIn = true;
+            //     // } else {
+            //     //     result.send("The username you entered is already in use, use of some other username. IT SHOULD BE UNIQUE.")
+            //     // }
+                
+
+            // } else {
+            //     newStudent.save((err, res) => {
+            //         if (err) return handleError(err);
+            //         else return console.log("saved successfully")
+            //     });
+
+            //     isLoggedIn = true;
+                
+            //     result.redirect("/home")
+            // }
         } else {
-            if (res.length !== 0 ) {
-                var passwordMatches = {value: false}
-                res.every(stu => {
-                    passwordMatches.value = bcrypt.compareSync(password,stu.password);
-                    if (passwordMatches.value) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                });
-                console.log(passwordMatches.value + " out of foreach") 
-
-                if (passwordMatches.value) {
-                    result.send("You are now logged in.");
-                    isLoggedIn = true;
-                } else {
-                    result.send("The username you entered is already in use, use of some other username. IT SHOULD BE UNIQUE.")
-                }
-                
-
-            } else {
-                newStudent.save((err, res) => {
-                    if (err) return handleError(err);
-                    else return console.log("saved successfully")
-                });
-
-                isLoggedIn = true;
-                
-                result.redirect("/home")
-            }
+            newStudent.save((err, res) => {
+                if (err) return handleError(err);
+                else return console.log('saved successfully.');
+            })
+            isLoggedIn = true;
+            result.redirect('/home');
         }
     })
 })
@@ -182,6 +195,36 @@ app.get("/home", (req, res) => {
     } else {
         res.redirect("/signin");
     }
+})
+
+app.get('/login', (req, res) => {
+    res.render(__dirname + '/public/login.html');
+})
+app.post('/login', (req, res) => {
+    stuList.find({username: req.body.username}, (err, response) => {
+        if (err) {
+            console.log(err)
+        } else if (response.length == 0) {
+            res.send("No matching result Found.")
+        } else if (response.length !== 0) {
+            var passwordMatches = {value: false}
+            response.every(stu => {
+                passwordMatches.value = bcrypt.compareSync(req.body.password, stu.password);
+                if (passwordMatches.value) {
+                    return false;   
+                } else {
+                    return true;
+                }
+            });
+
+            if (passwordMatches.value) {
+                res.send("You are logged in.")
+                isLoggedIn = true;
+            } else {
+                res.send("Incorrect password or username, RETRY.")
+            }
+        }
+    })
 })
 
 app.listen(port, () => {
