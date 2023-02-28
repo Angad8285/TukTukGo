@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const { stringify } = require('querystring');
 // var engines = require('consolidate');
 const { appendFile } = require('fs');
@@ -99,6 +100,13 @@ function dummyDrivers() {
 //         }
 //     })
 // }
+// function deleteStu() {
+//     stuList.deleteMany({}, (err, db) => {
+//         if (err) {
+//             console.log(err)
+//         }
+//     })
+// }
 
 
 // app.get("/n", (req, res) => {
@@ -111,6 +119,7 @@ app.get("/signin", (req, res) => {
     // res.render(__dirname + "/public/index.ejs");
     // res.render(__dirname + '/public/signup-signin/signin.html')
     // dummy();
+    // deleteStu();
     res.render(__dirname + "/public/signin.html");
 })
 
@@ -118,11 +127,12 @@ app.post('/signin', (req, result) => {
     const name = req.body.name;
     const username = req.body.username;
     const password = req.body.password;
-    // console.log(req.body.name);
+    const salt = bcrypt.genSaltSync(10);
+    var hashedPassword = bcrypt.hashSync(password, salt);
     const newStudent = new stuList({
         name: name,
         username: username,
-        password: password
+        password: hashedPassword
     })
 
     var unAlreadyExists = 0;
@@ -133,19 +143,24 @@ app.post('/signin', (req, result) => {
             console.log("err")
         } else {
             if (res.length !== 0 ) {
-                var passwordMatches = false
-                res.forEach(stu => {
-                    if (stu.password == password) {
-                        passwordMatches = true;
+                var passwordMatches = {value: false}
+                res.every(stu => {
+                    passwordMatches.value = bcrypt.compareSync(password,stu.password);
+                    if (passwordMatches.value) {
+                        return false;
+                    } else {
+                        return true;
                     }
                 });
+                console.log(passwordMatches.value + " out of foreach") 
 
-                if (passwordMatches) {
+                if (passwordMatches.value) {
                     result.send("You are now logged in.");
                     isLoggedIn = true;
                 } else {
                     result.send("The username you entered is already in use, use of some other username. IT SHOULD BE UNIQUE.")
                 }
+                
 
             } else {
                 newStudent.save((err, res) => {
@@ -159,9 +174,6 @@ app.post('/signin', (req, result) => {
             }
         }
     })
-
-    // console.log(newStudent.name);
-    
 })
 
 app.get("/home", (req, res) => {
