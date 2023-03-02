@@ -2,8 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const ejs = require('ejs');
 const { stringify } = require('querystring');
-// var engines = require('consolidate');
 const { appendFile } = require('fs');
 const { BlockList } = require('net');
 
@@ -117,6 +117,7 @@ function dummyDrivers() {
 
 app.get('/', (req, res) => {
     res.render(__dirname + "/public/frontPage.html")
+    // dummyDrivers();
 })
 
 
@@ -158,14 +159,6 @@ app.post('/signin', (req, result) => {
     })
 })
 
-app.get("/home", (req, res) => {
-    if (isLoggedIn) {
-        res.render(__dirname + "/public/home.html")
-    } else {
-        res.redirect("/signin");
-    }
-})
-
 app.get('/login', (req, res) => {
     res.render(__dirname + '/public/login.html');
 })
@@ -187,13 +180,41 @@ app.post('/login', (req, res) => {
             });
 
             if (passwordMatches.value) {
-                res.send("You are logged in.")
+                res.redirect('/home');
                 isLoggedIn = true;
             } else {
                 res.send("Incorrect password or username, RETRY.")
+                
             }
         }
     })
+})
+
+
+app.get("/home", (req, res) => {
+    if (isLoggedIn) {
+        // res.render(__dirname + "/public/home.html")
+        // var availableDrivers = [];
+        driver.find({}, (err, list) => {
+            if (err) {
+                console.log(err);
+            } else {
+                var availableDrivers = list.filter(autoDriver => autoDriver.occupancy<4)
+                // list.forEach(autoDriver => {
+                //     if (autoDriver.occupancy < 4) {
+                //         // console.log(autoDriver)
+                //         availableDrivers.push(autoDriver);
+                //         // console.log(availableDrivers+"hello world")
+                //     }
+                // })
+                res.render('home', {availableDrivers: availableDrivers});
+            }
+        })
+        // console.log(availableDrivers);
+        
+    } else {
+        res.redirect("/login");
+    }
 })
 
 app.listen(port, () => {
