@@ -22,8 +22,8 @@ app.use(express.static('public'));
 ///////////////////////////////////////////// . GLOBAL VARIABLES      ///////////////////////
 
 var isLoggedIn = false;
-const spots = ["Main Gate","Auditorium", "Jaggi Complex", "G-Block", "Library", "Tan Building", "Dispencary", "H-Hostel", "J-Hostel", "Cos Complex", "M-Hostel", "L-Hostel", "K-Hostel", "A-Hostel", "B-Hostel", "C-Hostel", "I-Hostel", "PG-Hostel", "Q-Hostel", "E-block"];
-
+const spots = ["Main Gate", "Jaggi Complex", "G-Block", "Library", "Tan Building","E,G,I- Hostel", "dispensary", "H-Hostel", "J-Hostel", "Cos Complex", "M-Hostel", "L-Hostel", "K-Hostel", "A-Hostel", "B-Hostel", "C-Hostel", "PG-Hostel", "Q-Hostel", "E-block", "Mechanical Department"];
+const route1 = ["Main Gate",]
 
 //////////////////////////////////////////// .  MONGODB CONNECTION    ///////////////////////
 mongoose.set('strictQuery', true);
@@ -39,7 +39,10 @@ mongoose.connect("mongodb://Angad:singh121@ac-tkwxqzt-shard-00-00.cge8liy.mongod
 const Schema = mongoose.Schema
 const driverSchema = new Schema({
     diLocation: String,
-    dfLocation: String,
+    dfLocation1: String,
+    dfLocation2: String,
+    dfLocation3: String,
+    dfLocation4: String,
     dNumber: String,
     occupancy: Number
 });
@@ -68,14 +71,14 @@ const stuList = mongoose.model('stuList', stuListSchema);
  
 /////////////// . DUMMUY DATA FOR DRIVERS   //////////////////
 function dummyDrivers() {
-    for (var i = 0; i < 15; i++ ) {
+    for (var i = 0; i < spots.length; i++ ) {
         var random1 = Math.floor(Math.random() * (spots.length) );
-        var random2 = Math.floor(Math.random() * (spots.length) );
+        // var random2 = Math.floor(Math.random() * (spots.length) );
         var random3 = Math.floor(Math.random() * (5) );
-        if ( random1 !== random2) {
+        // if ( random1 !== random2) {
             const autoDriver = new driver ({
                 diLocation: spots[random1],
-                dfLocation: spots[random2],
+                // dfLocation: spots[random2],
                 dNumber: "+91 94534 34232",
                 occupancy: random3
             })
@@ -87,7 +90,7 @@ function dummyDrivers() {
                     console.log("response: " + res)
                 }
             })
-        }
+        // }
     }
 }
 
@@ -117,7 +120,8 @@ function dummyDrivers() {
 
 app.get('/', (req, res) => {
     res.render(__dirname + "/public/frontPage.html")
-    // dummyDrivers();
+    // deleteDummy();
+    dummyDrivers();
 })
 
 
@@ -190,31 +194,32 @@ app.post('/login', (req, res) => {
     })
 })
 
-
 app.get("/home", (req, res) => {
     if (isLoggedIn) {
         // res.render(__dirname + "/public/home.html")
-        // var availableDrivers = [];
         driver.find({}, (err, list) => {
             if (err) {
                 console.log(err);
             } else {
                 var availableDrivers = list.filter(autoDriver => autoDriver.occupancy<4)
-                // list.forEach(autoDriver => {
-                //     if (autoDriver.occupancy < 4) {
-                //         // console.log(autoDriver)
-                //         availableDrivers.push(autoDriver);
-                //         // console.log(availableDrivers+"hello world")
-                //     }
-                // })
                 res.render('home', {availableDrivers: availableDrivers});
             }
-        })
-        // console.log(availableDrivers);
-        
+        })        
     } else {
         res.redirect("/login");
     }
+})
+
+app.get('/book/:params', (req, res)=>{
+    console.log(req.params.params);
+    res.send("underConstruction");
+    driver.findById(req.params.params, (err, doc) => {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log(doc);
+        }
+    })
 })
 
 app.listen(port, () => {
