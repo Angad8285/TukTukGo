@@ -13,9 +13,9 @@
     <h3>available autos</h3>
     <ol>
         <% availableDrivers.forEach( rickshaw => { %>
-            <li>HoHo
+            <li>
                 <ul>
-                    <li>Where he is <%= rickshaw.diLocation %></li> 
+                    <li>Where he is: <%= rickshaw.diLocation %></li> 
                     <li>Occupancy: <%= rickshaw.occupancy %></li>
                     <li><form method="get" action=<%="/book/" + rickshaw._id%>>
                         <button type="submit">Book</button>

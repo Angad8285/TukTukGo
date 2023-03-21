@@ -94,15 +94,15 @@ function dummyDrivers() {
     }
 }
 
-// function deleteDummy() {
-//     driver.deleteMany({dNumber: "+91 94534 34232"}, (err, db) => {
-//         if (err) {
-//             console.log(err)
-//         } else {
-//             db.close;
-//         }
-//     })
-// }
+function deleteDummy() {
+    driver.deleteMany({dNumber: "+91 94534 34232"}, (err, db) => {
+        if (err) {
+            console.log(err)
+        } else {
+            db.close;
+        }
+    })
+}
 // function deleteStu() {
 //     stuList.deleteMany({}, (err, db) => {
 //         if (err) {
@@ -121,7 +121,7 @@ function dummyDrivers() {
 app.get('/', (req, res) => {
     res.render(__dirname + "/public/frontPage.html")
     // deleteDummy();
-    dummyDrivers();
+    // dummyDrivers();
 })
 
 
