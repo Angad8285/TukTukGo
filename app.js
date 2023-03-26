@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+// const popup = require('popups');
 const ejs = require('ejs');
 const { stringify } = require('querystring');
 const { appendFile } = require('fs');
@@ -21,7 +22,8 @@ app.use(express.static('public'));
 
 ///////////////////////////////////////////// . GLOBAL VARIABLES      ///////////////////////
 
-var isLoggedIn = false;
+var userIsLoggedIn = false;
+var driIsLoggedIn = false;
 const spots = ["Main Gate", "Jaggi Complex", "G-Block", "Library", "Tan Building","E,G,I- Hostel", "dispensary", "H-Hostel", "J-Hostel", "Cos Complex", "M-Hostel", "L-Hostel", "K-Hostel", "A-Hostel", "B-Hostel", "C-Hostel", "PG-Hostel", "Q-Hostel", "E-block", "Mechanical Department"];
 const route1 = ["Main Gate",]
 
@@ -58,12 +60,20 @@ const stuListSchema = new Schema ({
     username: String,
     password: String
 })
+
+const driListSchema = new Schema({
+    name: String,
+    username: String,
+    autoNumber: Number,
+    password: String
+})
 //////////////////////////////////////////// .   SCHEMAS END     /////////////////////////////////
 
 //////////////////////////////////////////// .   MODEL FORMATIONS   ///////////////////////////////
 const driver = mongoose.model('driver', driverSchema);
 const student = mongoose.model('student', studentSchema);
 const stuList = mongoose.model('stuList', stuListSchema);
+const driList = mongoose.model('driList', driListSchema);
 /////////////////////////////////////////// .   MODEL FORMATIONS DONE    ////////////////////////////////
 
 
@@ -73,9 +83,7 @@ const stuList = mongoose.model('stuList', stuListSchema);
 function dummyDrivers() {
     for (var i = 0; i < spots.length; i++ ) {
         var random1 = Math.floor(Math.random() * (spots.length) );
-        // var random2 = Math.floor(Math.random() * (spots.length) );
         var random3 = Math.floor(Math.random() * (5) );
-        // if ( random1 !== random2) {
             const autoDriver = new driver ({
                 diLocation: spots[random1],
                 // dfLocation: spots[random2],
@@ -90,7 +98,6 @@ function dummyDrivers() {
                     console.log("response: " + res)
                 }
             })
-        // }
     }
 }
 
@@ -111,27 +118,99 @@ function deleteDummy() {
 //     })
 // }
 
-
 // app.get("/n", (req, res) => {
-//     
 //     console.log(spots.length);
 //     console.log(random1);
 // })
 
 app.get('/', (req, res) => {
-    res.render(__dirname + "/public/frontPage.html")
-    // deleteDummy();
-    // dummyDrivers();
+    driIsLoggedIn = false;
+    userIsLoggedIn = false;
+    res.render(__dirname + "/public/frontFrontPage.html");
+    deleteDummy();
 })
 
-
-app.get("/signin", (req, res) => {
-    // dummy();
-    // deleteStu();
-    res.render(__dirname + "/public/signin.html");
+app.get("/driver", (req, res)=>{
+    driIsLoggedIn = false;
+    res.render(__dirname + "/public/driFrontPage.html");
 })
 
-app.post('/signin', (req, result) => {
+app.get("/driver/signin", (req, res) => {
+    driIsLoggedIn = false;
+    res.render(__dirname + "/public/driSignin.html");
+})
+
+app.post("/driver/signin", (req, result) => {
+    const name = req.body.name;
+    const autoNumber = req.body.autoNumber;
+    const username = req.body.username;
+    const password = req.body.password;
+    const salt = bcrypt.genSaltSync(10);
+    var hashedPassword = bcrypt.hashSync(password, salt);
+
+    const newDriver = new driList({
+        name: name,
+        autoNumber: autoNumber,
+        username: username,
+        password: hashedPassword
+    })
+
+    driList.find({username: username}, (err, res) => {
+        if (err) {
+            console.log("err " + err)
+        } else if(res.length != 0) {
+            result.send("username already exists, it should be unique.")
+        } else {
+            newDriver.save((err, response) => {
+                if (err) return handleError(err);
+                else return console.log("save successful")
+            })
+            driIsLoggedIn = true;
+            result.redirect('/driver/home');
+        }
+    })
+})
+
+app.get("/driver/login", (req, res) => {
+    driIsLoggedIn = false;
+    res.render(__dirname+ "/public/driLogin.html")
+})
+
+app.post("/driver/login", (req, result) => {
+    driList.find({username: req.body.username}, (err, res) => {
+        if (err) return handleError(err)
+        else if (res.length == 0) {
+            result.send("Incorrect password or username, RETRY.")
+        } else {
+            var passwordMatches = bcrypt.compareSync(req.body.password, res[0].password)
+            if (passwordMatches) {
+                driIsLoggedIn = true;
+                result.redirect("/driver/home");
+            } else {
+                result.send("Incorrect password or username, RETRY.")
+            }
+        }
+    })
+})
+app.get("/driver/home", (req, res) => {
+    if (driIsLoggedIn) {
+        res.send("Driver is at home.");
+    } else {
+        res.redirect("/driver");
+    }
+})
+
+app.get("/user", (req, res) => {
+    userIsLoggedIn = false;
+    res.render(__dirname + "/public/usrFrontPage.html")
+})
+
+app.get("/user/signin", (req, res) => {
+    userIsLoggedIn = false;
+    res.render(__dirname + "/public/usrSignin.html");
+})
+
+app.post('/user/signin', (req, result) => {
     const name = req.body.name;
     const username = req.body.username;
     const password = req.body.password;
@@ -147,55 +226,47 @@ app.post('/signin', (req, result) => {
 
     stuList.find({username: req.body.username}, (err, res) => {
         if (err) {
-            console.log(err)
-            console.log("err")
+            console.log("err " + err)
         } else if (res.length !== 0) {
-            result.send("The username you entered is already in use, use some other username. IT SHOULD BE UNIQUE.")
-              result.redirect("/home")
+            // popup.alert({
+            //     content: "The username you entered is already in use, use some other username. IT SHOULD BE UNIQUE."
+            // });
+            result.redirect("/user/home");
         } else {
             newStudent.save((err, res) => {
                 if (err) return handleError(err);
                 else return console.log('saved successfully.');
             })
-            isLoggedIn = true;
-            result.redirect('/home');
+            userIsLoggedIn = true;
+            result.redirect('/user/home');
         }
     })
 })
 
-app.get('/login', (req, res) => {
-    res.render(__dirname + '/public/login.html');
+app.get('/user/login', (req, res) => {
+    userIsLoggedIn = false;
+    res.render(__dirname + '/public/usrlogin.html');
 })
-app.post('/login', (req, res) => {
+app.post('/user/login', (req, res) => {
     stuList.find({username: req.body.username}, (err, response) => {
         if (err) {
             console.log(err)
         } else if (response.length == 0) {
-            res.send("No matching result Found.")
-        } else if (response.length !== 0) {
-            var passwordMatches = {value: false}
-            response.every(stu => {
-                passwordMatches.value = bcrypt.compareSync(req.body.password, stu.password);
-                if (passwordMatches.value) {
-                    return false;   
-                } else {
-                    return true;
-                }
-            });
-
-            if (passwordMatches.value) {
-                res.redirect('/home');
-                isLoggedIn = true;
+            res.send("Incorrect password or username, RETRY.")
+        } else {
+            var passwordMatches = bcrypt.compareSync(req.body.password, response[0].password);
+            if (passwordMatches) {
+                res.redirect('/user/home');
+                userIsLoggedIn = true;
             } else {
                 res.send("Incorrect password or username, RETRY.")
-                
             }
         }
     })
 })
 
-app.get("/home", (req, res) => {
-    if (isLoggedIn) {
+app.get("/user/home", (req, res) => {
+    if (userIsLoggedIn) {
         // res.render(__dirname + "/public/home.html")
         driver.find({}, (err, list) => {
             if (err) {
@@ -206,11 +277,11 @@ app.get("/home", (req, res) => {
             }
         })        
     } else {
-        res.redirect("/login");
+        res.redirect("/user");
     }
 })
 
-app.get('/book/:params', (req, res)=>{
+app.get('/user/book/:params', (req, res)=>{
     console.log(req.params.params);
     res.send("underConstruction");
     driver.findById(req.params.params, (err, doc) => {
