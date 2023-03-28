@@ -7,6 +7,7 @@ const ejs = require('ejs');
 const { stringify } = require('querystring');
 const { appendFile } = require('fs');
 const { BlockList } = require('net');
+const { posix } = require('path');
 
 const app = express();
 const port = 6969;
@@ -194,7 +195,9 @@ app.post("/driver/login", (req, result) => {
 })
 app.get("/driver/home", (req, res) => {
     if (driIsLoggedIn) {
-        res.send("Driver is at home.");
+        res.render(__dirname + "/public/driHome.html")
+
+        // navigator.geolocation.getCurrentPosition(position => console.log(position), err => console.log(err))
     } else {
         res.redirect("/driver");
     }
